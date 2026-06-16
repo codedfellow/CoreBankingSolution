@@ -1,3 +1,16 @@
 <Solution>
-  <Project Path="Corebanking.API/Corebanking.API.csproj" />
+  <Folder Name="/src/">
+    <Project Path="Corebanking.API/Corebanking.API.csproj" />
+    <Project Path="Corebanking.Application/Corebanking.Application.csproj" Id="b1d31bf3-086f-4745-96a2-aa9f671846a3" />
+    <Project Path="Corebanking.Domain/Corebanking.Domain.csproj" Id="ef19d4e3-9a1b-4553-9da6-f533fef07a47" />
+    <Project Path="Corebanking.Infrastructure/Corebanking.Infrastructure.csproj" Id="46167683-50db-4037-b88c-d0fe408de871" />
+    <Project Path="Corebanking.Persistence/Corebanking.Persistence.csproj" Id="ace44ebb-9221-4a37-9dec-f52fc6a4f3d6" />
+    <Project Path="Corebanking.Shared/Corebanking.Shared.csproj" Id="49da7619-38f7-49c7-863b-b7fd36c1613a" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="Corebanking.API.Tests/Corebanking.API.Tests.csproj" Id="53ffdbd2-72ca-4b0e-b46a-8aa2782acb19" />
+    <Project Path="Corebanking.Application.Tests/Corebanking.Application.Tests.csproj" Id="5e3458f9-01b2-4704-896e-5324a645931c" />
+    <Project Path="Corebanking.Domain.Tests/Corebanking.Domain.Tests.csproj" Id="85ad0dac-fe20-4eb4-9cc8-9472a43a50f4" />
+    <Project Path="Corebanking.Infrastructure.Tests/Corebanking.Infrastructure.Tests.csproj" Id="9b1770c6-e78e-4f75-a721-36c72eba5d3d" />
+  </Folder>
 </Solution>

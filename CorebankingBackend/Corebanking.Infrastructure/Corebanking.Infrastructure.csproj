@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Corebanking.Application\Corebanking.Application.csproj" />
+    <ProjectReference Include="..\Corebanking.Persistence\Corebanking.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>
