@@ -1,7 +1,16 @@
+using Corebanking.API.Extensions;
+using DotNetEnv;
+using Corebanking.Application.Extensions;
+using Corebanking.Infrastructure.Extensions;
+using Corebanking.Persistence.Extensions;
+
+Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+object value = builder.Services.AddApi(builder.Configuration).AddApplication().AddInfrastructure().AddPersistence();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
