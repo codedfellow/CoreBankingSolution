@@ -8,11 +8,16 @@
   <ItemGroup>
     <PackageReference Include="DotNetEnv" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Corebanking.Infrastructure\Corebanking.Infrastructure.csproj" />
+    <ProjectReference Include="..\Corebanking.Persistence\Corebanking.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

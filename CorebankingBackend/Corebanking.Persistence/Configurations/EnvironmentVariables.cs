@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Corebanking.Infrastructure.Configurations
+namespace Corebanking.Persistence.Configurations
 {
-    internal static class EnvironmentVariables
+    internal class EnvironmentVariables
     {
         public static string ConnectionString = Environment.GetEnvironmentVariable("ConnectionString") ?? throw new ArgumentNullException("Connection string not provided");
     }
