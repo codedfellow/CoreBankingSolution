@@ -1,5 +1,4 @@
 ﻿using Corebanking.API.Endpoints;
-using Corebanking.API.OpenApi;
 using Corebanking.Application.Features.Auth.Dtos;
 using Microsoft.OpenApi;
 
@@ -9,34 +8,35 @@ namespace Corebanking.API.Extensions
     {
         public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
         {
-            //services.AddEndpointsApiExplorer();
-            services.AddOpenApi(options =>
+            services.AddSwaggerGen(options =>
             {
-                options.AddDocumentTransformer((document, context, ct) =>
+                options.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    document.Info = new OpenApiInfo
-                    {
-                        Title = "CoreBanking API",
-                        Version = "v1",
-                        Description = "Core Banking System API"
-                    };
-                    return Task.CompletedTask;
+                    Title = "CoreBanking API",
+                    Version = "v1",
+                    Description = "Core Banking System API"
                 });
 
-                // JWT security definition
-                options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+                // Security definition — tells Swagger UI to show the Authorize button
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Enter your JWT token here. Do not add 'Bearer' prefix."
+                });
 
-                //// ✅ Ensure schemas are included in components
-                //options.AddSchemaTransformer((schema, context, ct) =>
-                //{
-                //    if (context.JsonTypeInfo.Type == typeof(RegisterRequest) ||
-                //        context.JsonTypeInfo.Type == typeof(LoginRequest) ||
-                //        context.JsonTypeInfo.Type == typeof(AuthResponse))
-                //    {
-                //        schema.Nullable = false;
-                //    }
-                //    return Task.CompletedTask;
-                //});
+                // Security requirement — tells Swagger UI to send the token on every request
+                options.AddSecurityRequirement(document =>
+                {
+                    var requirement = new OpenApiSecurityRequirement();
+                    requirement.Add(
+                        new OpenApiSecuritySchemeReference("Bearer"),
+                        new List<string>());
+                    return requirement;
+                });
             });
 
             return services;

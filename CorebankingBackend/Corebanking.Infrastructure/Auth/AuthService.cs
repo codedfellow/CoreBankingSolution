@@ -24,7 +24,8 @@ namespace Corebanking.Infrastructure.Auth
                 UserName = email,
                 Email = email,
                 FirstName = firstName,
-                LastName = lastName
+                LastName = lastName,
+                IsActive = true,
             };
 
             var createResult = await userManager.CreateAsync(user, password);

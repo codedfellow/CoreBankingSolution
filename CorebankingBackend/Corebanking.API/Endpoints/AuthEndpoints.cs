@@ -1,4 +1,5 @@
-﻿using Corebanking.Application.Contracts.CQRS;
+﻿using Corebanking.API.Common;
+using Corebanking.Application.Contracts.CQRS;
 using Corebanking.Application.Features.Auth.Commands;
 using Corebanking.Application.Features.Auth.Dtos;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -10,7 +11,7 @@ namespace Corebanking.API.Endpoints
     {
         public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/api/auth").WithTags("Auth");
+            var group = app.MapGroup(EndpointRoutes.BaseV1Routes).WithTags("Auth");
 
             group.MapPost("/register", async Task<Results<Created<AuthResponse>, BadRequest<ErrorResponse>>> (
                 RegisterRequest request,
@@ -33,26 +34,26 @@ namespace Corebanking.API.Endpoints
             .WithSummary("Register a new user")
             .WithDescription("Creates a new user account and returns a JWT access token");
 
-            //group.MapPost("/login", async Task<Results<Ok<AuthResponse>, UnauthorizedHttpResult, BadRequest<ErrorResponse>>> (
-            //        LoginRequest request,
-            //        IDispatcher dispatcher,
-            //        CancellationToken ct) =>
-            //{
-            //    var command = new LoginUserCommand(request.Email, request.Password);
-            //    var result = await dispatcher.Send(command, ct);
+            group.MapPost("/login", async Task<Results<Ok<AuthResponse>, UnauthorizedHttpResult, BadRequest<ErrorResponse>>> (
+                    LoginRequest request,
+                    IDispatcher dispatcher,
+                    CancellationToken ct) =>
+            {
+                var command = new LoginUserCommand(request.Email, request.Password);
+                var result = await dispatcher.Send(command, ct);
 
-            //    if (!result.IsSuccess)
-            //    {
-            //        return result.Errors.Contains("Account is locked. Try again later.")
-            //            ? TypedResults.BadRequest(new ErrorResponse(result.Errors))
-            //            : TypedResults.Unauthorized();
-            //    }
+                if (!result.IsSuccess)
+                {
+                    return result.Errors.Contains("Account is locked. Try again later.")
+                        ? TypedResults.BadRequest(new ErrorResponse(result.Errors))
+                        : TypedResults.Unauthorized();
+                }
 
-            //    return TypedResults.Ok(result.Value!);
-            //})
-            //    .WithName("Login")
-            //    .WithSummary("Login")
-            //    .WithDescription("Authenticates a user and returns a JWT access token");
+                return TypedResults.Ok(result.Value!);
+            })
+                .WithName("Login")
+                .WithSummary("Login")
+                .WithDescription("Authenticates a user and returns a JWT access token");
 
             group.MapGet("/me", Results<Ok<CurrentUserResponse>, UnauthorizedHttpResult> (
                     ClaimsPrincipal user) =>

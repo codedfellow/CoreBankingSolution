@@ -4,6 +4,7 @@ using Corebanking.Infrastructure.Extensions;
 using Corebanking.Persistence.Data;
 using Corebanking.Persistence.Extensions;
 using Corebanking.Persistence.Identity;
+using Corebanking.Shared.Constants;
 using DotNetEnv;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -21,17 +22,17 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     // Built-in OpenAPI JSON endpoint
-    app.MapOpenApi();
-
-    // Swagger UI pointed at the built-in OpenAPI endpoint
+    app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "CoreBanking API v1");
+        // ✅ Swashbuckle serves JSON here, not /openapi/v1.json
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "CoreBanking API v1");
         options.RoutePrefix = "swagger";
         options.DocumentTitle = "CoreBanking API";
         options.DisplayRequestDuration();
         options.EnableDeepLinking();
         options.EnableFilter();
+        options.EnablePersistAuthorization();
     });
 }
 
@@ -41,32 +42,13 @@ app.UseAuthorization();
 
 app.MapAllEndpoints();
 
-//var summaries = new[]
-//{
-//    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-//};
-
-//app.MapGet("/weatherforecast", () =>
-//{
-//    var forecast = Enumerable.Range(1, 5).Select(index =>
-//        new WeatherForecast
-//        (
-//            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-//            Random.Shared.Next(-20, 55),
-//            summaries[Random.Shared.Next(summaries.Length)]
-//        ))
-//        .ToArray();
-//    return forecast;
-//})
-//.WithName("GetWeatherForecast");
-
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BankingDbContext>();
     await db.Database.MigrateAsync();
 
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppIdentityRole>>();
-    foreach (var role in new[] { "Customer", "BackOffice" })
+    foreach (var role in new[] { UserRolesConsts.Customer, UserRolesConsts.BackOffice })
     {
         if (!await roleManager.RoleExistsAsync(role))
             await roleManager.CreateAsync(new AppIdentityRole(role));
@@ -74,8 +56,3 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
-
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
