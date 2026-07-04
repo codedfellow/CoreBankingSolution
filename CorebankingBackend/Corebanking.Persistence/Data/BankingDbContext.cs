@@ -1,4 +1,6 @@
-﻿using Corebanking.Persistence.Identity;
+﻿using Corebanking.Domain.Common;
+using Corebanking.Domain.Entities;
+using Corebanking.Persistence.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -9,23 +11,14 @@ using System.Text;
 
 namespace Corebanking.Persistence.Data
 {
-    public class BankingDbContext : IdentityDbContext<
-        ApplicationUser,
-        IdentityRole<Guid>,
-        Guid>
+    public class BankingDbContext(DbContextOptions<BankingDbContext> options)
+    : IdentityDbContext<AppIdentityUser, AppIdentityRole, Guid>(options)
     {
-        public BankingDbContext(
-            DbContextOptions<BankingDbContext> options)
-            : base(options)
-        {
-        }
 
 
         // Banking entities
 
-        //public DbSet<Customer> Customers
-        //    => Set<Customer>();
-
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
         //public DbSet<Account> Accounts
         //    => Set<Account>();
@@ -48,11 +41,11 @@ namespace Corebanking.Persistence.Data
         private static void ConfigureIdentityTables(
             ModelBuilder builder)
         {
-            builder.Entity<ApplicationUser>()
+            builder.Entity<AppIdentityUser>()
                 .ToTable("Users");
 
 
-            builder.Entity<IdentityRole<Guid>>()
+            builder.Entity<AppIdentityRole>()
                 .ToTable("Roles");
 
 
@@ -74,6 +67,17 @@ namespace Corebanking.Persistence.Data
 
             builder.Entity<IdentityUserToken<Guid>>()
                 .ToTable("UserTokens");
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            foreach (var entry in ChangeTracker.Entries<AuditableEntity<Guid>>())
+            {
+                if (entry.State == EntityState.Modified)
+                    entry.Entity.ModifiedAtUtc = DateTime.UtcNow;
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
         }
     }
 }

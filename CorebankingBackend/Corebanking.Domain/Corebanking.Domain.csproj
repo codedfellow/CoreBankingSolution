@@ -7,9 +7,4 @@
     <ProjectReference Include="..\Corebanking.Shared\Corebanking.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Common\" />
-    <Folder Include="Entities\" />
-  </ItemGroup>
-
 </Project>

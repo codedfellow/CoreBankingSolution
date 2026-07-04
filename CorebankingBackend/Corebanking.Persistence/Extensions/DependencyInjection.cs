@@ -1,7 +1,9 @@
 ﻿using Corebanking.Application.Contracts.Configurations;
+using Corebanking.Application.Contracts.Data.Common;
 using Corebanking.Persistence.Configurations;
 using Corebanking.Persistence.Data;
 using Corebanking.Persistence.Identity;
+using Corebanking.Persistence.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -33,6 +35,9 @@ namespace Corebanking.Persistence.Extensions
                             errorCodesToAdd: null);
                     });
             });
+            
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
 
             return services;
         }
