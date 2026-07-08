@@ -51,9 +51,71 @@ namespace Corebanking.API.Endpoints
 
                 return TypedResults.Ok(result.Value!);
             })
-                .WithName("Login")
-                .WithSummary("Login")
-                .WithDescription("Authenticates a user and returns a JWT access token");
+            .WithName("Login")
+            .WithSummary("Login")
+            .WithDescription("Authenticates a user and returns a JWT access token");
+
+            group.MapPost("/refresh-token", async Task<Results<Ok<AuthResponse>, UnauthorizedHttpResult, BadRequest<ErrorResponse>>> (
+            RefreshTokenRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            {
+                var result = await dispatcher.Send(
+                    new RefreshTokenCommand(request.AccessToken, request.RefreshToken), ct);
+
+                if (!result.IsSuccess)
+                {
+                    return result.Errors.Any(e => e.Contains("Invalid") || e.Contains("mismatch") || e.Contains("expired"))
+                        ? TypedResults.Unauthorized()
+                        : TypedResults.BadRequest(new ErrorResponse(result.Errors));
+                }
+
+                return TypedResults.Ok(result.Value!);
+            })
+            .WithName("RefreshToken")
+            .WithSummary("Refresh access token")
+            .WithDescription("Issues a new access token and refresh token using a valid refresh token. Old refresh token is revoked (rotation).");
+
+            group.MapPost("/revoke-token", async Task<Results<NoContent, NotFound<ErrorResponse>, ForbidHttpResult>> (
+                RevokeTokenRequest request, IDispatcher dispatcher, ClaimsPrincipal user, CancellationToken ct) =>
+            {
+                var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? user.FindFirst("sub")?.Value;
+
+                if (!Guid.TryParse(userIdClaim, out var userId))
+                    return TypedResults.Forbid();
+
+                var result = await dispatcher.Send(
+                    new RevokeRefreshTokenCommand(request.RefreshToken, userId), ct);
+
+                if (!result.IsSuccess)
+                {
+                    return result.Errors.Any(e => e.Contains("not found"))
+                        ? TypedResults.NotFound(new ErrorResponse(result.Errors))
+                        : TypedResults.Forbid();
+                }
+
+                return TypedResults.NoContent();
+            })
+            .RequireAuthorization()
+            .WithName("RevokeToken")
+            .WithSummary("Revoke a refresh token")
+            .WithDescription("Revokes a specific refresh token. User must be authenticated.");
+
+            group.MapPost("/revoke-all-tokens", async Task<Results<NoContent, UnauthorizedHttpResult>> (
+                IDispatcher dispatcher, ClaimsPrincipal user, CancellationToken ct) =>
+            {
+                var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? user.FindFirst("sub")?.Value;
+
+                if (!Guid.TryParse(userIdClaim, out var userId))
+                    return TypedResults.Unauthorized();
+
+                await dispatcher.Send(new RevokeAllRefreshTokensCommand(userId), ct);
+                return TypedResults.NoContent();
+            })
+            .RequireAuthorization()
+            .WithName("RevokeAllTokens")
+            .WithSummary("Revoke all refresh tokens")
+            .WithDescription("Revokes all active refresh tokens for the current user — effectively logs out from all devices.");
 
             group.MapGet("/me", Results<Ok<CurrentUserResponse>, UnauthorizedHttpResult> (
                     ClaimsPrincipal user) =>
@@ -71,10 +133,10 @@ namespace Corebanking.API.Endpoints
                     user.FindFirst("last_name")?.Value ?? string.Empty,
                     user.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList()));
             })
-                .RequireAuthorization()
-                .WithName("GetCurrentUser")
-                .WithSummary("Get current user")
-                .WithDescription("Returns the currently authenticated user profile");
+            .RequireAuthorization()
+            .WithName("GetCurrentUser")
+            .WithSummary("Get current user")
+            .WithDescription("Returns the currently authenticated user profile");
 
             return app;
         }
@@ -82,6 +144,8 @@ namespace Corebanking.API.Endpoints
 
     public sealed record RegisterRequest(string FirstName, string LastName, string Email, string Password);
     public sealed record LoginRequest(string Email, string Password);
+    public sealed record RefreshTokenRequest(string AccessToken, string RefreshToken);
+    public sealed record RevokeTokenRequest(string RefreshToken);
 
     public sealed record ErrorResponse(string[] Errors);
 

@@ -17,6 +17,8 @@ namespace Corebanking.Application.Contracts
             string email,
             string password,
             CancellationToken ct = default);
+
+        Task<AuthServiceResult> GetUserByIdAsync(Guid userId, CancellationToken ct = default);
     }
 
     public sealed record AuthServiceResult(
@@ -27,5 +29,6 @@ namespace Corebanking.Application.Contracts
         string? LastName,
         IList<string>? Roles,
         string[]? Errors,
-        bool IsLockedOut = false);
+        bool IsLockedOut = false,
+        bool IsActive = true);
 }

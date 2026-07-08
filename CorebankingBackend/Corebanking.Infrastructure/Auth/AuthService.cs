@@ -56,5 +56,22 @@ namespace Corebanking.Infrastructure.Auth
 
             return new AuthServiceResult(true, user.Id, user.Email, user.FirstName, user.LastName, roles, null);
         }
+
+        public async Task<AuthServiceResult> GetUserByIdAsync(Guid userId, CancellationToken ct = default)
+        {
+            var user = await userManager.FindByIdAsync(userId.ToString());
+            if (user is null)
+                return Fail(["User not found."]);
+
+            var roles = await userManager.GetRolesAsync(user);
+            return Ok(user, roles);
+        }
+
+        private static AuthServiceResult Ok(AppIdentityUser user, IList<string> roles)
+        => new(true, user.Id, user.Email, user.FirstName, user.LastName,
+            roles, null, false, user.IsActive);
+
+        private static AuthServiceResult Fail(string[] errors, bool isLockedOut = false)
+            => new(false, null, null, null, null, null, errors, isLockedOut);
     }
 }

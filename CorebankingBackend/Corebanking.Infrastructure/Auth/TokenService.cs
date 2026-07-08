@@ -1,4 +1,5 @@
-﻿using Corebanking.Application.Contracts.Common;
+﻿using Corebanking.Application.Common;
+using Corebanking.Application.Contracts.Common;
 using Corebanking.Application.DTOs;
 using Corebanking.Infrastructure.Configurations;
 using Corebanking.Persistence.Identity;
@@ -75,6 +76,53 @@ namespace Corebanking.Infrastructure.Auth
         {
             var bytes = RandomNumberGenerator.GetBytes(64);
             return Convert.ToBase64String(bytes);
+        }
+
+        public ApiResult<TokenPrincipal> GetPrincipalFromExpiredToken(string accessToken)
+        {
+            try
+            {
+                var tokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidateLifetime = false, // ✅ Ignore expiry intentionally
+                    ValidIssuer = EnvironmentVariables.JwtIssuer,
+                    ValidAudience = EnvironmentVariables.JwtAudience,
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(EnvironmentVariables.JwtSigningKey))
+                };
+
+                var handler = new JwtSecurityTokenHandler();
+                var principal = handler.ValidateToken(accessToken, tokenValidationParameters, out var securityToken);
+
+                if (securityToken is not JwtSecurityToken jwtToken ||
+                    !jwtToken.Header.Alg.Equals(
+                        SecurityAlgorithms.HmacSha256,
+                        StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return ApiResult<TokenPrincipal>.Failure("Invalid token algorithm.");
+                }
+
+                var userIdClaim = principal.FindFirst(JwtRegisteredClaimNames.Sub)
+                    ?? principal.FindFirst(ClaimTypes.NameIdentifier);
+
+                var emailClaim = principal.FindFirst(JwtRegisteredClaimNames.Email)
+                    ?? principal.FindFirst(ClaimTypes.Email);
+
+                if (userIdClaim is null || emailClaim is null)
+                    return ApiResult<TokenPrincipal>.Failure("Token is missing required claims.");
+
+                if (!Guid.TryParse(userIdClaim.Value, out var userId))
+                    return ApiResult<TokenPrincipal>.Failure("Invalid user ID in token.");
+
+                return ApiResult<TokenPrincipal>.Success(new TokenPrincipal(userId, emailClaim.Value));
+            }
+            catch (Exception ex)
+            {
+                return ApiResult<TokenPrincipal>.Failure($"Token validation failed: {ex.Message}");
+            }
         }
     }
 }
