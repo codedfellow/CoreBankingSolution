@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "customer_banking_frontend": {
+    "staff-portal": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -56,10 +56,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "customer_banking_frontend:build:production"
+              "buildTarget": "staff-portal:build:production"
             },
             "development": {
-              "buildTarget": "customer_banking_frontend:build:development"
+              "buildTarget": "staff-portal:build:development"
             }
           },
           "defaultConfiguration": "development"
